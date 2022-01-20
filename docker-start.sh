@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
 
 # shellcheck disable=SC2154
-if [[ ${farmer} == 'true' ]]; then
-  kujenga start farmer-only
-elif [[ ${harvester} == 'true' ]]; then
-  if [[ -z ${farmer_address} || -z ${farmer_port} || -z ${ca} ]]; then
-    echo "A farmer peer address, port, and ca path are required."
-    exit
-  else
-    kujenga configure --set-farmer-peer "${farmer_address}:${farmer_port}"
-    kujenga start harvester
-  fi
-else
-  kujenga start farmer
+kujenga start "${service}"
+
+trap "echo Shutting down ...; kujenga stop all -d; exit 0" SIGINT SIGTERM
+
+# shellcheck disable=SC2154
+if [[ ${log_to_file} == 'true' ]]; then
+  # Ensures the log file actually exists, so we can tail successfully
+  touch "$KUJENGA_ROOT/log/debug.log"
+  tail -F "$KUJENGA_ROOT/log/debug.log" &
 fi
 
-# Ensures the log file actually exists, so we can tail successfully
-touch "$CONFIG_ROOT/log/debug.log"
-tail -f "$CONFIG_ROOT/log/debug.log"
+while true; do sleep 1; done
